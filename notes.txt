@@ -1,0 +1,278 @@
+Docker notes
+•	VMs are a house. Each one has it’s own plumbing, etc. If you need another house, you build the whole thing.
+•	Containers are apartments in a building.
+o	The docker host is the apartment building.
+o	Docker daemon is like the doorman in the building
+•	Docker container shares the kernel with the underlying host, much like everyone shares the elevator or electrical in an apartment.
+•	Containers are isolated and you can’t move from one to the other, like apartment to apartment.
+•	Because they share the same kernel, they have to be the same O/S family. (Windows server containers or Linux, but you can’t run a linux container on a windows server).
+•	Container is everything your application needs to run.
+o	Base container on o/s definition
+o	RH7, with docker daemon and start an Ubuntu container
+	With a python app (in a linux container), it doesn’t install python on your server, but it does exist in the container.
+•	Docker Image – full application
+•	Docker Container – standard unit where app lives
+•	Docker Engine – creates, ships and runs docker container
+•	Data persistence has to be written outside of the container into a different volume
+o	Nothing exists once the container is stopped
+
+ 
+Docker for Devs:
+
+•	Create consistent environments between dev and prod
+•	Version Control
+o	Dockerfile defines what’s in the container
+
+Docker for Ops:
+
+•	Always have an odd number of managers
+o	The smaller the number, the faster the consensus
+•	Security:
+o	Docker trusted registry
+o	Docker notary
+•	Image signing with Notary:
+o	Sets up a trust model between registry and the engine
+o	(all docker images are signed)
+•	Protect our containers processes:
+o	Applying apparmor allows us to run only the processes we want to run.
+o	Won’t allow unwanted process to spawn
+o	Locks down file system for unwanted reads or writes
+•	Ex: docker run –rm –it –security-opt apparmor=docker-default hello-world
+•	Logspout – from gliderlabs on github for logging
+o	Collects all logs from the container
+o	Encrypts logs in transit and can dump into whatever log system you want.
+•	User -> (git push) -> git server -> Jenkins -> push to trusted repository
+
+
+Creating effective images:
+
+•	What are layers?
+o	Read-only container layers make up base image
+o	Thin read-write layer is stacked on top of read-only layers
+•	More layers = larger images, larger images takes longer to boot and pull from registry
+•	Use shared base images when possible
+•	Limit data written to the container layer
+•	Chain Run statements together
+o	Each Run command creates another layer
+•	Anything that’s unchanged between builds, put it in cache!
+•	Docker Security Scan
+o	Will check images and make notes on issues with files
+
+Key-Value store:
+
+•	Limitations:
+o	Scalability
+	Managers can’t be scaled as quickly as workers.
+o	Resilience
+	Managers might be overflowed if one dies
+o	Security
+	Managers have all the power and would be the target of attackers
+o	Performance
+•	Connectivity of nodes is critical to route messages to right node as not every node has all the info.
+•	The more nodes in the system, the faster the system is.
+
+Docker at Intuit:
+•	Hosting:
+o	Isolated hosts running RHEL 7
+o	No data stored inside the containers
+o	No container to container communication
+o	Use existing technologies
+•	Applications:
+o	Java 8, stateless, services
+o	Tomcat servers on RHEL 7
+o	Applied to entire SDLC: local dev to production
+•	Have to solve monitoring before going into production!
+
+INTUIT FAILURES:
+•	Stale ingress load balancing
+o	Updating a docker service could leave an old entry in the F5 pool causing intermittent failures
+o	No easy way to list f5 pool and what was happening
+•	Ephemeral port exhaustion can happen as a container is NOT a VM. All containers share one TCP/IP stack.
+o	Can add virtual IPs and add those to the bare metal and provision those.
+•	The real networking issue is that hosts were too chatty.
+o	Tune connection & socket timeout
+o	Remove stale connections from connection pool before sending request
+o	Retries on specific exceptions.
+•	Zombie containers:
+o	Don’t allow automated o/s patching on docker hosts – cuased DHCP issues
+o	Don’t patch kernel packages on live docker hosts
+•	DO: drain docker hosts, shutdown services before patching
+•	Use: Universal Control Plane (UCP)
+•	Start small and keep first install simple
+
+
+Journey to Production:
+
+•	Microservice conversion isn’t required
+•	12 Factor is a horizon we’re chasing, not a destination
+•	What to focus on first:
+o	Dockerfile – the underpinning of it all. Get better dockerfiles rather than orchestration.
+o	At first, focus on “it works” rather than fancy
+	Use lots of comments to follow what it’s doing.
+o	Use FROM official distro’s that are most familiar
+•	Don’t store unique data in container – use an external volume
+o	“volume” is not the same as a “bind mount” for sharing data with the host. (typically used in development)
+•	Pin images to a known version, so that each start doesn’t pull a new “latest”
+o	You don’t do it with your code, so don’t do it with all the dependencies on the FROM host.
+•	Dockerfile = build documentation!
+•	Put application defaults in the Dockerfile
+o	E.g. php.ini, mysql.conf.d settings
+	If you keep them in the Dockerfile you won’t lose them on container rebuild (if they weren’t documented before)
+•	Keep images generic enough that you can use one image for dev, stage, and prod and change settings at runtime, not buildtime.
+o	A generic image keeps the build stable
+•	Do some generic performance testing on container before putting into production – you will learn before it impacts your production env.
+•	Try to use most current distro before going to prod as you’ll likely get better support for docker, performance, etc.
+•	Swarm:
+o	Look at “Swarm3k lessons learned”
+•	3-node swarm is minimum – for HA
+o	one node can fail
+o	all managers & workers
+•	5-node – better HA
+o	After 5-node, only keep 5 managers
+•	Multiple swarm
+o	Geographical locations
+o	Keep managers close to workers
+o	PCI compliance
+o	Don’t create another swarm based on hardware, etc. Just use node lables and/or constraints to separate.
+•	Outsource things you don’t need to “build’
+o	Monitoring
+o	Docker registry vs running your own
+•	Use Containers for tech support mock environments
+o	Set up test “tech support” services for learning, growing, etc.
+o	Customer demos / temp test environments
+o	Any process where you “wait for human to deploy/configure a VM”
+
+Docker in China (Alibaba):
+•	Docker is hottest tech in China
+•	Desired benefits:
+o	Accelerated development
+o	Improve resource utilization
+o	Application portability
+o	Hybrid cloud portability
+•	Barriers:
+o	Lack of skills
+o	Inexperience to operate
+o	Networking
+o	Persistent storage
+o	Workload migration
+
+Lowering the barrier to entry with docker: (anniehedgie.com)
+•	Inspec – security/compliance auditing framework that Chef published
+o	https://www.chef.io/inspec/
+
+gRPC io:
+•	test and find slow rpc calls
+•	specify deadlines and retry policies before giving up
+•	Proxy load balancing
+•	Client side load balancing
+•	gRPC-LB – lookaside load balancing
+o	defined by business logic
+
+Zero Docker to Hackathon winner:
+•	Start with official documentation and grow from there:
+o	Docker.com – Documentation
+o	Free training - http://training.docker.com/category/self-paced-online - or instructor led (paid)
+
+Container Performance Analysis:
+•	Netflix – uses Titus – cloud runtime platform for container jobs
+o	1M containers / week
+o	mostly m4.xl
+•	Service –
+o	Flink – stream services
+o	Node.js
+•	See titus blog from last week
+•	Performance needs:
+o	Application analytiss
+o	Host tuning
+o	Container analytin and tuning
+•	Docker 1.13
+o	---cpus
+o	–cpu-shares
+o	Container CPU limit = 100% * (continaer shares / total busy shares)
+	This lets containers burst using other tenants idle shares
+o	Container minimum cpu limit = 100% * (container’s shares / total allocated shares)
+•	Filesystems:
+o	Docs.docker.com/engine/userguide/storagedriver/
+•	Networking w/ overlay, etc
+•	Perf. Analysis w/ containers:
+o	One kernel
+o	Two perspectives – from host or from container
+o	Namespaces
+o	Cgroups
+•	USE Method (picture)
+o	Every resource, check:
+	1 – utilization
+	2- Saturation
+	3 – errors
+o	utilization – time busy on cpu (bursting when cpu over 100%)
+o	saturation – run queue length or latency (latency when other tenants are busy)
+o	errors – ECC erros, etc.
+•	Host Tools:
+o	(pics and shared on Netflix tech blog)
+•	see “docker stats”
+•	nsenter – namespace enter for tools
+o	nsenter –t == namespace top
+•	perf – main performance tool for linux
+o	perf –a = system-wide
+o	perf –p = match a pid
+o	perf –G = match cgroups
+o	See pic for other links
+	Flamegraphs, etc
+•	Perf, like “bcc” – advanced perf stats
+•	https://blogs.docker.com/2013/10/gathering-lxc…
+•	Netflix Atlas – open source cloud monitoring
+•	Netflix Vector – per-instance analyzer – no historical stats
+•	Intel snap
+o	Github.com/intelsdi-x/snap
+•	Ftrace – part of his perf-tools
+•	Perf_events – used fro cpu flame graphs
+•	eBPF – enhanced Berkley perf
+o	github.com/iovisor/bcc (Linux 4.4+)
+•	https://www.slideshare.net/brendangregg
+
+Monitoring the docker developer lifecycle:
+•	“You can’t improve what you don’t measure”
+o	the code you pushed today, did it get faster, slower, what?
+•	Collect all the data you can, as storage is cheap – not having data later can be very costly.
+o	Spend time to think about what metrics are important to you. Collecting everything will give you lots of info you might not need.
+•	Monitoring 101 – 
+o	Work Metrics – most important
+	Throughput
+	Success codes
+	Error codes
+	Availability
+o	Resource Metrics – somewhat important
+	Utilization – need context to be clear
+	Saturation – how long is stuff waiting around to work
+	error
+	availability
+o	Events – not overly important, but provide context to others
+	Code Changes
+	Alerts
+	Scaling Events
+	Etc
+•	Identify Metrics that help achieve Business Goals
+
+Visa:
+•	Docker engine
+o	Default dns server running
+o	In every app container DNS will run and talk with docker engine
+o	Network Control Plane – established in swarm so hosts know about each other
+o	All services get VIP that’s controlled internally by docker for load balancing services
+
+Docker IT Diet:
+•	Start with valid base image – known distro and know what’s under the covers.
+Using containers in Production shouldn’t be this hard:
+•	Containers as a packaging format
+o	Low effort, high impact
+•	If you don’t need overlay networking, don’t start with it.
+o	Start with –net=host
+	Some tiny security issues with doing this, but don’t run container as root.
+•	Service Discovery – essentially dynamic DNS
+o	You can do this by yourself with config. Management
+o	Service Discovery can register hosts in DNS and the load balancer, etc.
+•	Persistent applications:
+o	You can run them in containers, but don’t use orchestration as you may kill your state with automatic failure discovery and recovery.
+o	Bind mount known paths on the host that are persistent (mounted EBS driver for example).
+
+
