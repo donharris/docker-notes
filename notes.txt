@@ -3,18 +3,18 @@ Docker Notes
 2.  Containers are apartments in a building.
   - The docker host is the apartment building.
   - Docker daemon is like the doorman in the building
-•	Docker container shares the kernel with the underlying host, much like everyone shares the elevator or electrical in an apartment.
-•	Containers are isolated and you can’t move from one to the other, like apartment to apartment.
-•	Because they share the same kernel, they have to be the same O/S family. (Windows server containers or Linux, but you can’t run a linux container on a windows server).
-•	Container is everything your application needs to run.
-  o	Base container on o/s definition
-  o	RH7, with docker daemon and start an Ubuntu container
-    *	With a python app (in a linux container), it doesn’t install python on your server, but it does exist in the container.
-•	Docker Image – full application
-•	Docker Container – standard unit where app lives
-•	Docker Engine – creates, ships and runs docker container
-•	Data persistence has to be written outside of the container into a different volume
-  o	Nothing exists once the container is stopped
+3. Docker container shares the kernel with the underlying host, much like everyone shares the elevator or electrical in an apartment.
+4. Containers are isolated and you can’t move from one to the other, like apartment to apartment.
+5. Because they share the same kernel, they have to be the same O/S family. (Windows server containers or Linux, but you can’t run a linux container on a windows server).
+6. Container is everything your application needs to run.
+  - Base container on o/s definition
+  - RH7, with docker daemon and start an Ubuntu container
+    - With a python app (in a linux container), it doesn’t install python on your server, but it does exist in the container.
+7. Docker Image – full application
+8. Docker Container – standard unit where app lives
+9. Docker Engine – creates, ships and runs docker container
+10. Data persistence has to be written outside of the container into a different volume
+  - Nothing exists once the container is stopped
 
  
 Docker for Devs:
