@@ -1,8 +1,8 @@
 Docker Notes
-## VMs are a house. Each one has it’s own plumbing, etc. If you need another house, you build the whole thing.
-## Containers are apartments in a building.
-  o	The docker host is the apartment building.
-  o	Docker daemon is like the doorman in the building
+1. VMs are a house. Each one has it’s own plumbing, etc. If you need another house, you build the whole thing.
+2.  Containers are apartments in a building.
+  - The docker host is the apartment building.
+  - Docker daemon is like the doorman in the building
 •	Docker container shares the kernel with the underlying host, much like everyone shares the elevator or electrical in an apartment.
 •	Containers are isolated and you can’t move from one to the other, like apartment to apartment.
 •	Because they share the same kernel, they have to be the same O/S family. (Windows server containers or Linux, but you can’t run a linux container on a windows server).
