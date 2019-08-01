@@ -19,14 +19,14 @@ Docker Notes
  
 Docker for Devs:
 
-•	Create consistent environments between dev and prod
-•	Version Control
-  o	Dockerfile defines what’s in the container
+1. Create consistent environments between dev and prod
+2. Version Control
+  - Dockerfile defines what’s in the container
 
 Docker for Ops:
 
-•	Always have an odd number of managers
-  o	The smaller the number, the faster the consensus
+- Always have an odd number of managers
+  - The smaller the number, the faster the consensus
 •	Security:
   o	Docker trusted registry
   o	Docker notary
